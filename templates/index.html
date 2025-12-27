@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .loader {
+            border-top-color: #3b82f6;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-black text-gray-100 min-h-screen flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+    <!-- Background Effects -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+            class="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000">
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="w-full relative z-10 p-6">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div
+                    class="w-8 h-8 bg-gradient-to-tr from-purple-500 to-blue-500 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+                </div>
+                <h1
+                    class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-blue-200">
+                    Vortex
+                </h1>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-center p-6 w-full max-w-2xl mx-auto relative z-10">
+
+        <!-- Search Section -->
+        <div
+            class="w-full bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/10 ring-1 ring-white/5 transition-all hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]">
+            <h2
+                class="text-4xl font-extrabold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                Unleash the Content
+            </h2>
+            <p class="text-gray-400 text-center mb-10 text-lg">Download from YouTube, Instagram & Facebook in seconds.
+            </p>
+
+            <div class="relative group">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
+                </div>
+                <div class="relative flex flex-col md:flex-row gap-3 bg-gray-900 rounded-xl p-2">
+                    <input type="url" id="urlInput" placeholder="Paste your link here..."
+                        class="flex-grow p-4 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none focus:ring-0 text-lg">
+                    <button id="fetchBtn"
+                        class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg flex items-center justify-center gap-2">
+                        <span>Fetch</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMsg"
+                class="hidden mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-xl text-center backdrop-blur-sm">
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="hidden mt-12 flex flex-col items-center">
+            <div class="relative w-16 h-16">
+                <div class="absolute top-0 left-0 w-full h-full border-4 border-purple-500/30 rounded-full"></div>
+                <div
+                    class="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-purple-500 rounded-full animate-spin">
+                </div>
+            </div>
+            <p class="mt-4 text-purple-200/80 font-medium animate-pulse tracking-wide">Analyzing Stream...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultSection"
+            class="hidden w-full mt-8 bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/10 ring-1 ring-white/5 animate-fade-in-up">
+            <div class="flex flex-col md:flex-row">
+                <!-- Thumbnail -->
+                <div class="w-full md:w-5/12 bg-black/50 relative group cursor-pointer overflow-hidden">
+                    <img id="thumbnail" src="" alt="Video Thumbnail"
+                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                </div>
+
+                <!-- Details -->
+                <div class="w-full md:w-7/12 p-6 flex flex-col">
+                    <div class="flex-grow">
+                        <h3 id="videoTitle" class="text-xl font-bold text-white mb-4 line-clamp-2 leading-tight">Video
+                            Title</h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Quality</label>
+                                <div class="relative">
+                                    <select id="qualitySelect"
+                                        class="block w-full appearance-none bg-black/40 border border-white/10 text-gray-200 py-3 px-4 pr-8 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors cursor-pointer hover:bg-black/60">
+                                        <!-- Options populated by JS -->
+                                    </select>
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20">
+                                            <path
+                                                d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/10">
+                        <button id="downloadBtn"
+                            class="w-full group bg-white text-black hover:bg-gray-100 font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2">
+                            <span>Download</span>
+                            <svg class="w-5 h-5 transition-transform group-hover:translate-y-1" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="p-6 text-center text-gray-600 text-sm relative z-10">
+        <p>&copy; 2024 Vortex Downloader.</p>
+    </footer>
+
+    <script>
+        // Select DOM elements for interaction
+        const fetchBtn = document.getElementById('fetchBtn');
+        const urlInput = document.getElementById('urlInput');
+        const errorMsg = document.getElementById('errorMsg');
+        const loader = document.getElementById('loader');
+        const resultSection = document.getElementById('resultSection');
+        const thumbnail = document.getElementById('thumbnail');
+        const videoTitle = document.getElementById('videoTitle');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Store the URL of the currently fetched video
+        let currentVideoUrl = '';
+
+        // Event listener for the "Fetch" button click
+        fetchBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            // Do nothing if input is empty
+            if (!url) return;
+
+            // Reset UI states: hide error/results, show loader
+            errorMsg.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                // Send POST request to backend to get video info
+                const response = await fetch('/get_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                // Handle server-side errors
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch video info');
+                }
+
+                currentVideoUrl = url;
+
+                // Populate UI with fetched video details
+                thumbnail.src = data.thumbnail;
+                videoTitle.textContent = data.title;
+
+                // Clear previous options
+                qualitySelect.innerHTML = '';
+
+                // Add default "Best Quality" option
+                const bestOption = document.createElement('option');
+                bestOption.value = 'best';
+                bestOption.textContent = 'Best Quality (Auto-Merge)';
+                qualitySelect.appendChild(bestOption);
+
+                // Add options for each available format returned by the backend
+                if (data.formats && data.formats.length > 0) {
+                    data.formats.forEach(fmt => {
+                        const opt = document.createElement('option');
+                        opt.value = fmt.format_id;
+                        opt.textContent = `${fmt.resolution} (${fmt.ext})`;
+                        qualitySelect.appendChild(opt);
+                    });
+                }
+
+                // Show the results section
+                resultSection.classList.remove('hidden');
+
+            } catch (err) {
+                // Display error message to the user
+                errorMsg.textContent = err.message;
+                errorMsg.classList.remove('hidden');
+            } finally {
+                // Hide loader regardless of success or failure
+                loader.classList.add('hidden');
+            }
+        });
+
+        // Event listener for the "Download" button click
+        downloadBtn.addEventListener('click', async () => {
+            const quality = qualitySelect.value;
+
+            // Disable button and show loading state (spinner)
+            downloadBtn.disabled = true;
+            const originalBtnHTML = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+             `;
+            downloadBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            try {
+                // Send POST request to backend to capture/download the video
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: currentVideoUrl,
+                        quality: quality
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Download failed');
+                }
+
+                // If successful, redirect browser to the download URL to trigger file save
+                if (data.status === 'success' && data.download_url) {
+                    window.location.href = data.download_url;
+                }
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                // Restore button state
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = originalBtnHTML;
+                downloadBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+
+</html>
