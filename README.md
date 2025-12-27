@@ -21,7 +21,7 @@ A Flask-based web application that allows users to download videos from various 
 
 1.  **Clone the repository** (or download source):
     ```bash
-    git clone <your-repo-url>
+    git clone <[https://github.com/shivamrajuniverse616-crypto/SaveFromNET>
     cd StoreFromNET
     ```
 
